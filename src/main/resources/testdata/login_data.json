@@ -1,0 +1,65 @@
+[
+  {
+    "username": "admin",
+    "password": "admin123",
+    "level": "Beginner",
+    "expectedSuccess": true,
+    "description": "Valid login credentials for admin user with Beginner level"
+  },
+  {
+    "username": "locked_out_user",
+    "password": "password123",
+    "level": "Advanced",
+    "expectedSuccess": false,
+    "description": "Locked out user attempt with Beginner level"
+  },
+  {
+    "username": "invalid_user",
+    "password": "wrong_password",
+    "level": "Beginner",
+    "expectedSuccess": false,
+    "description": "Invalid username and password with Beginner level"
+  },
+  {
+    "username": "",
+    "password": "password123",
+    "level": "Advanced",
+    "expectedSuccess": false,
+    "description": "Empty username with Beginner level"
+  },
+  {
+    "username": "admin",
+    "password": "",
+    "level": "Beginner",
+    "expectedSuccess": false,
+    "description": "Empty password with Beginner level"
+  },
+  {
+    "username": "admin",
+    "password": "admin123",
+    "level": "Intermediate",
+    "expectedSuccess": true,
+    "description": "Valid login credentials for admin user with Intermediate level"
+  },
+  {
+    "username": "admin",
+    "password": "admin123",
+    "level": "Advanced",
+    "expectedSuccess": true,
+    "description": "Valid login credentials for admin user with Advanced level"
+  },
+  {
+    "username": "admin",
+    "password": "admin123",
+    "level": "InvalidLevel",
+    "expectedSuccess": false,
+    "description": "Login with an invalid level"
+  },
+  {
+    "username": "admin",
+    "password": "admin123",
+    "level": "",
+    "expectedSuccess": false,
+    "description": "Login with an empty level"
+  }
+]

@@ -1,0 +1,73 @@
+.
+├── pom.xml
+├── project-structure.txt
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       └── ecommerce
+│   │   │           ├── annotations
+│   │   │           │   ├── Feature.java
+│   │   │           │   └── Priority.java
+│   │   │           ├── database
+│   │   │           │   └── DBUtil.java
+│   │   │           ├── factory
+│   │   │           │   ├── DriverFactory.java
+│   │   │           │   └── IDriverFactory.java
+│   │   │           ├── integrations
+│   │   │           │   └── JiraAPI.java
+│   │   │           ├── locators
+│   │   │           │   ├── CustomerAccountLocators.java
+│   │   │           │   ├── LoginLocators.java
+│   │   │           │   └── LogoutLocators.java
+│   │   │           ├── pages
+│   │   │           │   ├── AbstractBasePage.java
+│   │   │           │   ├── CustomerAccountPage.java
+│   │   │           │   ├── LoginPage.java
+│   │   │           │   └── LogoutPage.java
+│   │   │           ├── services
+│   │   │           │   ├── AuthService.java
+│   │   │           │   ├── ProductService.java
+│   │   │           │   └── RestClient.java
+│   │   │           └── utils
+│   │   │               ├── ConfigReader.java
+│   │   │               ├── ExtentReportManager.java
+│   │   │               ├── IWaitStrategy.java
+│   │   │               ├── ScreenshotUtil.java
+│   │   │               ├── SeleniumWaitStrategy.java
+│   │   │               ├── SmartBy.java
+│   │   │               ├── WaitUtils.java
+│   │   │               └── WebDriverUtils.java
+│   │   └── resources
+│   │       ├── config-qa.properties
+│   │       ├── log4j2.xml
+│   │       └── testdata
+│   │           ├── customer_data.csv
+│   │           └── login_data.json
+│   └── test
+│       └── java
+│           └── com
+│               └── ecommerce
+│                   ├── base
+│                   │   └── BaseTest.java
+│                   ├── data
+│                   │   └── TestDataProviders.java
+│                   ├── listeners
+│                   │   ├── PerformanceListener.java
+│                   │   ├── RetryAnalyzer.java
+│                   │   └── TestNGListener.java
+│                   └── tests
+│                       ├── CustomerAccountTest.java
+│                       ├── LoginTest.java
+│                       └── LogoutTest.java
+├── test-output
+│   ├── ExtentReport.html
+│   ├── logs
+│   │   ├── automation.log
+│   │   └── rolling_automation.log
+│   └── screenshots
+│       └── failed_test_name_timestamp.png
+├── testng-parallel.xml
+└── testng.xml
+
+27 directories, 44 files

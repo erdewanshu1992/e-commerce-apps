@@ -1,0 +1,25 @@
+customerId,firstName,lastName,email,phone,expectedStatus
+CUST001,John,Doe,john.doe@example.com,123-456-7890,Active
+CUST002,Jane,Smith,jane.smith@example.com,098-765-4321,Inactive
+CUST003,Mike,Johnson,mike.j@example.com,111-222-3333,Pending
+CUST004,Lisa,Williams,lisa.w@example.com,,Active
+CUST005,Robert,Brown,robert.brown@example.com,555-123-4567,Active
+CUST006,Sarah,Davis,sarah.davis@example.com,999-888-7777,Active
+CUST007,Emily,Taylor,emily.taylor@example.com,222-333-4444,Active
+CUST008,David,Miller,david.miller@example.com,777-666-5555,Active
+CUST009,Maria,Garcia,maria.g@example.com,333-444-5555,Active
+CUST010,James,Rodriguez,james.r@example.com,123-987-6543,Active
+CUST011,Linda,Martinez,linda.m@example.com,876-543-2109,Active
+CUST012,Chris,White,chris.white@example.com,111-000-9999,Active
+CUST013,Anna,Harris,anna.h@example.com,222-111-0000,Active
+CUST014,Peter,Clark,peter.c@example.com,444-555-6666,Active
+CUST015,Nancy,Lewis,nancy.l@example.com,777-888-9999,Active
+CUST016,Mark,Hall,mark.h@example.com,333-222-1111,Active
+CUST017,Karen,Allen,karen.a@example.com,666-777-8888,Active
+CUST018,Steven,Young,steven.y@example.com,000-111-2222,Active
+CUST019,Betty,King,betty.k@example.com,555-000-1111,Active
+CUST020,Paul,Wright,paul.w@example.com,999-000-1111,Active
+CUST021,Sam,Query,sam.query@example.com,123-456-7890,NotFound # For negative testing, e.g., customer not found
+CUST022,Test,,test@example.com,123-456-7890,Active # Empty last name test
+CUST023,Firstname,Lastname,,123-456-7890,Active # Empty email test (if allowed/handled)
+CUST024,FirstName,LastName,invalidemail,,Active # Invalid email format (needs validation in code)

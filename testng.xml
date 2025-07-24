@@ -1,0 +1,21 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="E-commerce Test Suite" parallel="methods" thread-count="2">
+
+    <parameter name="environment" value="qa"/> <listeners>
+    <listener class-name="com.ecommerce.listeners.TestNGListener"/>
+    <listener class-name="com.ecommerce.listeners.PerformanceListener"/>
+</listeners>
+
+    <test name="Login Functionality Tests">
+        <classes>
+            <class name="com.ecommerce.tests.LoginTest"/>
+        </classes>
+    </test>
+
+<!--    <test name="Customer Account Functionality Tests">-->
+<!--        <classes>-->
+<!--            <class name="com.ecommerce.tests.CustomerAccountTest"/>-->
+<!--        </classes>-->
+<!--    </test>-->
+
+</suite>
