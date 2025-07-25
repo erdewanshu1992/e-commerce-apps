@@ -16,7 +16,6 @@ public class LoginTest extends BaseTest {
         loginPage.enterPassword(password);
         loginPage.enterLevel(level);
         loginPage.clickLoginButton();
-
         if (expectedSuccess) {
             Assert.assertTrue(loginPage.isPageLoaded(), "Login should be successful for: " + username);
         } else {
