@@ -1,4 +1,5 @@
 .
+├── README.md
 ├── pom.xml
 ├── project-structure.txt
 ├── src
@@ -9,36 +10,38 @@
 │   │   │           ├── annotations
 │   │   │           │   ├── Feature.java
 │   │   │           │   └── Priority.java
+│   │   │           ├── api
+│   │   │           │   └── models
+│   │   │           │       ├── LoginRequest.java
+│   │   │           │       └── UserResponse.java
 │   │   │           ├── database
 │   │   │           │   └── DBUtil.java
 │   │   │           ├── factory
-│   │   │           │   ├── DriverFactory.java
-│   │   │           │   └── IDriverFactory.java
+│   │   │           │   └── DriverFactory.java
 │   │   │           ├── integrations
 │   │   │           │   └── JiraAPI.java
+│   │   │           ├── interfaces
+│   │   │           │   ├── IDriverFactory.java
+│   │   │           │   └── IWaitStrategy.java
 │   │   │           ├── locators
-│   │   │           │   ├── CustomerAccountLocators.java
-│   │   │           │   ├── LoginLocators.java
-│   │   │           │   └── LogoutLocators.java
+│   │   │           │   └── LoginLocators.java
 │   │   │           ├── pages
 │   │   │           │   ├── AbstractBasePage.java
-│   │   │           │   ├── CustomerAccountPage.java
-│   │   │           │   ├── LoginPage.java
-│   │   │           │   └── LogoutPage.java
+│   │   │           │   └── LoginPage.java
 │   │   │           ├── services
 │   │   │           │   ├── AuthService.java
 │   │   │           │   ├── ProductService.java
-│   │   │           │   └── RestClient.java
+│   │   │           │   ├── RestClient.java
+│   │   │           │   └── UserService.java
 │   │   │           └── utils
 │   │   │               ├── ConfigReader.java
 │   │   │               ├── ExtentReportManager.java
-│   │   │               ├── IWaitStrategy.java
 │   │   │               ├── ScreenshotUtil.java
 │   │   │               ├── SeleniumWaitStrategy.java
 │   │   │               ├── SmartBy.java
-│   │   │               ├── WaitUtils.java
 │   │   │               └── WebDriverUtils.java
 │   │   └── resources
+│   │       ├── config-local.properties
 │   │       ├── config-qa.properties
 │   │       ├── log4j2.xml
 │   │       └── testdata
@@ -57,9 +60,8 @@
 │                   │   ├── RetryAnalyzer.java
 │                   │   └── TestNGListener.java
 │                   └── tests
-│                       ├── CustomerAccountTest.java
-│                       ├── LoginTest.java
-│                       └── LogoutTest.java
+│                       ├── LoginApiTest.java
+│                       └── LoginTest.java
 ├── test-output
 │   ├── ExtentReport.html
 │   ├── logs
@@ -70,4 +72,4 @@
 ├── testng-parallel.xml
 └── testng.xml
 
-27 directories, 44 files
+30 directories, 44 files

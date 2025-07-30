@@ -1,116 +1,83 @@
 package com.ecommerce.utils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
-public class ConfigReader {
+public final class ConfigReader {
 
     private static final Logger logger = LogManager.getLogger(ConfigReader.class);
-    // Using ThreadLocal to store properties. This ensures thread-safety if
-    // you were to run multiple test suites in parallel, each needing a different config.
-    // For a single testng.xml, a simple static Properties field is also fine.
-    private static ThreadLocal<Properties> propThreadLocal = new ThreadLocal<>();
+    // THIS LINE IS CRUCIAL AND MUST BE PRESENT
+    private static final ThreadLocal<Properties> threadSafeProperties = new ThreadLocal<>();
 
-    /**
-     * Initializes the Properties object by loading configuration from the specified environment file.
-     * This method should be called once at the beginning of the test suite (e.g., in @BeforeSuite).
-     *
-     * @param env The environment name (e.g., "dev", "qa", "prod", "local").
-     * @return The loaded Properties object.
-     * @throws RuntimeException if the configuration file cannot be found or loaded.
-     */
-    public static Properties init_prop(String env) {
+    private ConfigReader() {
+        // Private constructor to prevent instantiation
+    }
+
+    public static void init_prop(String environment) {
         Properties prop = new Properties();
-        String configFilePath = "src/main/resources/config-" + env.toLowerCase() + ".properties";
-        FileInputStream fis = null;
-
+        FileInputStream ip = null;
         try {
-            fis = new FileInputStream(configFilePath);
-            prop.load(fis);
-            propThreadLocal.set(prop); // Store the loaded properties in ThreadLocal
+            String configFilePath = "src/main/resources/config-" + environment + ".properties";
+            logger.info("Attempting to load configuration from: {}", configFilePath);
+
+            File configFile = new File(configFilePath);
+            if (!configFile.exists()) {
+                logger.error("Configuration file NOT FOUND at: {}", configFile.getAbsolutePath());
+                throw new IOException("Config file not found: " + configFilePath);
+            }
+
+            ip = new FileInputStream(configFile);
+            prop.load(ip);
+            // THIS LINE USES 'threadSafeProperties'
+            threadSafeProperties.set(prop);
             logger.info("Configuration loaded successfully from: {}", configFilePath);
-            return prop;
+            logger.info("Value of 'db.enabled' directly from loaded properties: {}", prop.getProperty("db.enabled"));
+
         } catch (IOException e) {
-            logger.fatal("FATAL ERROR: Could not load configuration file: {}", configFilePath, e);
-            throw new RuntimeException("Failed to load configuration file: " + configFilePath + ". Error: " + e.getMessage(), e);
+            logger.error("Error loading configuration properties from {}: {}", e.getMessage(), e);
+            throw new RuntimeException("Error loading configuration properties file.", e);
         } finally {
-            if (fis != null) {
+            if (ip != null) {
                 try {
-                    fis.close();
+                    ip.close();
                 } catch (IOException e) {
-                    logger.error("Error closing FileInputStream for {}", configFilePath, e);
+                    logger.error("Error closing FileInputStream: {}", e.getMessage());
                 }
             }
         }
     }
 
-    /**
-     * Retrieves the Properties object for the current thread.
-     *
-     * @return The Properties object.
-     * @throws IllegalStateException if init_prop() has not been called for the current thread.
-     */
-    public static Properties getProperties() {
-        Properties prop = propThreadLocal.get();
+    public static String getProperty(String key, String path) {
+        // THIS LINE USES 'threadSafeProperties'
+        Properties prop = threadSafeProperties.get();
         if (prop == null) {
-            logger.error("Properties object not initialized. Call ConfigReader.init_prop() first.");
-            throw new IllegalStateException("Properties object not initialized. Call ConfigReader.init_prop() first.");
+            logger.error("Properties not initialized. Call ConfigReader.init_prop() firsts.");
+            throw new IllegalStateException("ConfigReader properties not initialized.");
+        }
+        String value = prop.getProperty(key);
+        if (value == null) {
+            logger.warn("Property '{}' not found in the configuration.", key);
+        }
+        return value;
+    }
+
+    public static Properties getProperties() {
+        // THIS LINE USES 'threadSafeProperties'
+        Properties prop = threadSafeProperties.get();
+        if (prop == null) {
+            logger.error("Properties not initialized. Call ConfigReader.init_prop() first.");
+            throw new IllegalStateException("ConfigReader properties not initialized.");
         }
         return prop;
     }
 
-    /**
-     * Retrieves a property value by its key from the loaded configuration.
-     *
-     * @param key The key of the property.
-     * @return The property value, or null if not found.
-     */
-    public static String getProperty(String key) {
-        return getProperties().getProperty(key);
-    }
-
-    /**
-     * Clears the ThreadLocal property for the current thread.
-     * Useful for cleaning up resources after a test suite.
-     */
     public static void clearProperties() {
-        propThreadLocal.remove();
-        logger.debug("Properties cleared for current thread.");
+        // THIS LINE USES 'threadSafeProperties'
+        threadSafeProperties.remove();
+        logger.info("Cleared ThreadLocal properties.");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-//package com.ecommerce.utils;
-//
-//import java.io.FileInputStream;
-//import java.util.Properties;
-//
-//public class ConfigReader {
-//    private final Properties prop;
-//
-//    public ConfigReader(String env) {
-//        try {
-//            FileInputStream fis = new FileInputStream("src/main/resources/config-" + env + ".properties");
-//            prop = new Properties();
-//            prop.load(fis);
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to load config for env: " + env);
-//        }
-//    }
-//
-//    public String getProperty(String key) {
-//        return prop.getProperty(key);
-//    }
-//}

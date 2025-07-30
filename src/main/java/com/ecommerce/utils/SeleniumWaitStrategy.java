@@ -1,13 +1,13 @@
-// src/main/java/com/ecommerce/utils/SeleniumWaitStrategy.java
 package com.ecommerce.utils;
 
+import com.ecommerce.interfaces.IWaitStrategy;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
+
 
 public class SeleniumWaitStrategy implements IWaitStrategy {
 

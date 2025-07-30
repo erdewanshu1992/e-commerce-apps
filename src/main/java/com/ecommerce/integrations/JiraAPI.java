@@ -18,9 +18,9 @@ public class JiraAPI {
     private final String jiraApiToken; // Or password for older versions/basic auth
 
     public JiraAPI() {
-        this.jiraBaseUrl = ConfigReader.getProperty("jira.api.url");
-        this.jiraUsername = ConfigReader.getProperty("jira.username");
-        this.jiraApiToken = ConfigReader.getProperty("jira.api.token"); // Use API Token for better security
+        this.jiraBaseUrl = ConfigReader.getProperty("jira.api.url", "/api/users");
+        this.jiraUsername = ConfigReader.getProperty("jira.username", "/api/users");
+        this.jiraApiToken = ConfigReader.getProperty("jira.api.token", "/api/users"); // Use API Token for better security
         RestAssured.baseURI = jiraBaseUrl; // Set base URI for RestAssured
         logger.info("JiraAPI initialized with base URL: " + jiraBaseUrl);
     }

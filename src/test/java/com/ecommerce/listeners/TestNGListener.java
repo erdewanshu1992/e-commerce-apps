@@ -1,8 +1,3 @@
-// src/main/java/com/ecommerce/listeners/TestNGListener.java
-
-// src/main/java/com/ecommerce/listeners/TestNGListener.java
-// (Remember, this file should be moved to src/test/java/com/ecommerce/listeners/TestNGListener.java as per previous suggestion)
-
 package com.ecommerce.listeners;
 
 import com.aventstack.extentreports.ExtentReports;

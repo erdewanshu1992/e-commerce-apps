@@ -3,7 +3,6 @@ package com.ecommerce.utils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebElement;
-
 import java.util.Arrays;
 import java.util.List;
 

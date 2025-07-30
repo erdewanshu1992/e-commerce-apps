@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Service class for interacting with the authentication API.
@@ -18,7 +17,7 @@ public class AuthService extends RestClient {
 
     public AuthService() {
         // Get API base URL from config.properties
-        super(ConfigReader.getProperty("api.base.url"));
+        super(ConfigReader.getProperty("api.base.url", "/api/users"));
         logger.info("AuthService initialized.");
     }
 

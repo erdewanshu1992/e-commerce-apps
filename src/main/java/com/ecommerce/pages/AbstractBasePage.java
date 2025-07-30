@@ -1,4 +1,3 @@
-// src/main/java/com/ecommerce/pages/AbstractBasePage.java
 package com.ecommerce.pages;
 
 import org.openqa.selenium.WebDriver;

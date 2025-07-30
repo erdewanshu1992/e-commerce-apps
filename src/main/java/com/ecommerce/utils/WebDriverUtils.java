@@ -1,7 +1,6 @@
-// src/main/java/com/ecommerce/utils/WebDriverUtils.java
-
 package com.ecommerce.utils;
 
+import com.ecommerce.interfaces.IWaitStrategy;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -9,10 +8,6 @@ import org.openqa.selenium.WebElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// REMOVED: import java.util.List; (if not used for other methods)
-
-// ADD THIS IMPORT STATEMENT
-import com.ecommerce.utils.SmartBy; // <--- THIS IS THE MISSING IMPORT
 
 public class WebDriverUtils {
 

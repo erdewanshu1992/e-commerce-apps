@@ -1,5 +1,3 @@
-// src/main/java/com/ecommerce/utils/ExtentReportManager.java
-
 package com.ecommerce.utils;
 
 import com.aventstack.extentreports.ExtentReports;
@@ -9,7 +7,7 @@ import com.aventstack.extentreports.reporter.configuration.Theme;
 public class ExtentReportManager {
 
     private static ExtentReports extent;
-    private static String reportFilePath = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
+    private static final String reportFilePath = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
 
     public synchronized static ExtentReports getReportObject() {
         if (extent == null) {

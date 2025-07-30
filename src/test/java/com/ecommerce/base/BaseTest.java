@@ -1,9 +1,8 @@
-// src/test/java/com/ecommerce/base/BaseTest.java (modified)
 package com.ecommerce.base;
 
 import com.ecommerce.database.DBUtil;
 import com.ecommerce.factory.DriverFactory;
-import com.ecommerce.factory.IDriverFactory;
+import com.ecommerce.interfaces.IDriverFactory;
 import com.ecommerce.utils.ConfigReader;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriver;
@@ -17,24 +16,35 @@ import org.apache.logging.log4j.Logger;
 public class BaseTest {
 
     private static final Logger logger = LogManager.getLogger(BaseTest.class);
-    private static IDriverFactory driverFactory = new DriverFactory(); // Use interface
+    private static final IDriverFactory driverFactory = new DriverFactory(); // Use interface
     protected WebDriver driver;
 
     // Using TestNG Parameters to get the environment from testng.xml
     @BeforeSuite
-    @Parameters({"environment"}) // This parameter will be passed from testng.xml
-    public void setupSuite(@Optional("qa") String environment) { // "qa" as default if not specified
+    @Parameters({"environment"})
+    public void setupSuite(@Optional("qa") String environment) {
         logger.info("Setting up test suite for environment: {}", environment);
-        // Initialize properties for the given environment
-        // The ConfigReader now directly manages the Properties object internally via ThreadLocal
-        ConfigReader.init_prop(environment);
+        // This is correct: Initialize properties for the given environment
+        ConfigReader.init_prop(environment); // This loads the properties into ThreadLocal
 
-        // Access properties using ConfigReader.getProperty() or ConfigReader.getProperties()
-        String dbEnabled = ConfigReader.getProperty("db.enabled"); // Example property for DB
+        // Now, when accessing db.enabled, it should correctly reflect the file.
+        String dbEnabled = ConfigReader.getProperty("db.enabled", "/api/users");
         if ("true".equalsIgnoreCase(dbEnabled)) {
-            DBUtil.establishConnection();
+            logger.info("Database interaction is enabled (db.enabled=true). Attempting to establish connection.");
+            DBUtil.establishConnection(); // Call establishConnection directly here
             // Example: Clean up database before suite starts
-            DBUtil.executeUpdate("DELETE FROM users WHERE email LIKE '%testuser%';");
+            DBUtil.executeUpdate("DELETE FROM credentials WHERE username LIKE '%testuser%';"); // Adjust based on common test usernames
+
+            // OR, if you want to clean up specific test data before each run
+            // For instance, if you insert specific test users for each run, and want to delete them later:
+            // You could also just use DELETE FROM credentials; with caution, or DELETE FROM credentials WHERE username = 'testuser1';
+            // It's common to delete by a pattern if your test users have a consistent naming convention.
+            // For example, if your test users are like 'testuser_1', 'testuser_2', 'testuser_db', etc.
+            // For simple cleanup, you might just want to delete known test accounts
+            DBUtil.executeUpdate("DELETE FROM credentials WHERE username = 'testuser1' OR username = 'testuser2';");
+            // Or, if you just want to clear all data in the credentials table (use with extreme caution on production-like databases!)
+            // DBUtil.executeUpdate("TRUNCATE TABLE credentials;"); // TRUNCATE is faster for full table clear
+            // DBUtil.executeUpdate("DELETE FROM credentials;"); // DELETE for full table clear (slower, but keeps auto-increment)
             logger.info("Database initialized and cleaned up.");
         } else {
             logger.info("Database interaction skipped (db.enabled=false).");
@@ -44,12 +54,12 @@ public class BaseTest {
     @AfterSuite
     public void tearDownSuite() {
         logger.info("Tearing down test suite.");
-        String dbEnabled = ConfigReader.getProperty("db.enabled"); // Access property using ConfigReader
+        String dbEnabled = ConfigReader.getProperty("db.enabled", "/api/users");
         if ("true".equalsIgnoreCase(dbEnabled)) {
             DBUtil.closeConnection();
             logger.info("Database connection closed.");
         }
-        ConfigReader.clearProperties(); // Clean up ThreadLocal properties
+        ConfigReader.clearProperties();
     }
 
     @BeforeMethod
@@ -57,29 +67,19 @@ public class BaseTest {
     public void setup() {
         logger.info("Starting test method setup.");
 
-        String browserName = ConfigReader.getProperty("browser");
-        String executionType = ConfigReader.getProperty("execution.type");
-        String appUrl = ConfigReader.getProperty("app.url");
+        String browserName = ConfigReader.getProperty("browser", "/api/users");
+        String executionType = ConfigReader.getProperty("execution.type", "/api/users");
+        String appUrl = ConfigReader.getProperty("app.url", "/api/users");
 
         if ("local".equalsIgnoreCase(executionType)) {
             driver = driverFactory.init_driver(browserName);
         } else if ("remote".equalsIgnoreCase(executionType)) {
-            String hubUrl = ConfigReader.getProperty("selenium.hub.url");
+            String hubUrl = ConfigReader.getProperty("selenium.hub.url", "/api/users");
 
             // --- IMPORTANT CHANGE HERE ---
             // You need to create a Capabilities object (e.g., ChromeOptions, FirefoxOptions)
             // or pass null and let DriverFactory handle defaults.
-            Capabilities capabilities = null; // Initialize to null
-
-            // Example of creating capabilities based on browser name
-            if ("chrome".equalsIgnoreCase(browserName)) {
-                capabilities = new ChromeOptions();
-                // Add specific Chrome options for remote execution if needed
-                // ((ChromeOptions) capabilities).addArguments("--no-sandbox");
-            } else if ("firefox".equalsIgnoreCase(browserName)) {
-                capabilities = new FirefoxOptions();
-                // Add specific Firefox options
-            }
+            Capabilities capabilities = getCapabilities(browserName);
             // ... add other browser types as needed
 
             driver = driverFactory.init_driver_remote(browserName, hubUrl, capabilities);
@@ -90,6 +90,21 @@ public class BaseTest {
 
         driver.get(appUrl);
         logger.info("Navigated to URL: {}", appUrl);
+    }
+
+    private static Capabilities getCapabilities(String browserName) {
+        Capabilities capabilities = null; // Initialize to null
+
+        // Example of creating capabilities based on browser name
+        if ("chrome".equalsIgnoreCase(browserName)) {
+            capabilities = new ChromeOptions();
+            // Add specific Chrome options for remote execution if needed
+            // ((ChromeOptions) capabilities).addArguments("--no-sandbox");
+        } else if ("firefox".equalsIgnoreCase(browserName)) {
+            capabilities = new FirefoxOptions();
+            // Add specific Firefox options
+        }
+        return capabilities;
     }
 
     @AfterMethod

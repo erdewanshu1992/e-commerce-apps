@@ -1,187 +1,156 @@
 package com.ecommerce.database;
 
-import com.ecommerce.utils.ConfigReader; // Import ConfigReader to get DB properties
+import com.ecommerce.utils.ConfigReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class DBUtil {
 
     private static final Logger logger = LogManager.getLogger(DBUtil.class);
-    // Using ThreadLocal for connection to support parallel test execution
-    // where each test might need its own independent DB connection.
-    private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
+    private static Connection connection = null;
+    private static Statement statement = null;
+    private static ResultSet resultSet = null;
 
-    /**
-     * Establishes a database connection and stores it in a ThreadLocal variable.
-     * This method should be called at the beginning of a test suite or method.
-     * Database credentials are fetched from ConfigReader.
-     *
-     * @throws RuntimeException if the database driver is not found or connection fails.
-     */
     public static void establishConnection() {
-        Connection connection = connectionThreadLocal.get();
-        if (connection != null) {
-            logger.info("Database connection already established for this thread. Reusing existing connection.");
-            return; // Connection already exists, no need to create a new one
+        if (connection == null) {
+            try {
+                Properties props = ConfigReader.getProperties();
+                String dbEnabled = props.getProperty("db.enabled");
+                if (!"true".equalsIgnoreCase(dbEnabled)) {
+                    logger.info("Database connection not enabled (db.enabled=false). Skipping connection.");
+                    return;
+                }
+
+                String dbUrl = props.getProperty("db.url");
+                String dbUsername = props.getProperty("db.username");
+                String dbPassword = props.getProperty("db.password");
+                String dbDriver = props.getProperty("db.driver");
+
+                Class.forName(dbDriver);
+                logger.info("Database driver loaded: {}", dbDriver);
+
+                connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+                logger.info("Database connection established successfully to: {}", dbUrl);
+
+            } catch (ClassNotFoundException e) {
+                logger.error("JDBC Driver not found: {}", e.getMessage(), e);
+                throw new RuntimeException("JDBC Driver not found. Please ensure it's in your classpath.", e);
+            } catch (SQLException e) {
+                logger.error("Failed to establish database connection: {}", e.getMessage(), e);
+                throw new RuntimeException("Failed to establish database connection.", e);
+            }
         }
+    }
 
-        Properties config = ConfigReader.getProperties(); // Get properties from ConfigReader
-        String dbUrl = config.getProperty("db.url");
-        String dbUsername = config.getProperty("db.username");
-        String dbPassword = config.getProperty("db.password");
-        String dbDriver = config.getProperty("db.driver");
-
-        if (dbUrl == null || dbUsername == null || dbPassword == null || dbDriver == null) {
-            logger.error("Missing database configuration properties. Please check db.url, db.username, db.password, db.driver in config file.");
-            throw new RuntimeException("Missing database configuration properties.");
-        }
-
+    public static void closeConnection() {
         try {
-            // Ensure the JDBC driver is loaded
-            Class.forName(dbDriver);
-            logger.info("JDBC Driver loaded: {}", dbDriver);
-
-            connection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-            connectionThreadLocal.set(connection); // Store the connection in ThreadLocal
-            if (connection != null) {
-                logger.info("Successfully connected to the database: {}", dbUrl);
-            } else {
-                logger.error("Failed to establish database connection to: {}", dbUrl);
-                throw new SQLException("DriverManager returned null connection.");
+            if (resultSet != null) {
+                resultSet.close();
+                logger.debug("ResultSet closed.");
+            }
+            if (statement != null) {
+                statement.close();
+                logger.debug("Statement closed.");
+            }
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                connection = null;
+                logger.info("Database connection closed.");
             }
         } catch (SQLException e) {
-            logger.error("Database connection error: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to connect to database: " + dbUrl + ". Error: " + e.getMessage(), e);
-        } catch (ClassNotFoundException e) {
-            logger.error("Database driver not found: {}. Please add the JDBC driver to your classpath.", dbDriver, e);
-            throw new RuntimeException("Database driver not found: " + dbDriver, e);
+            logger.error("Error closing database resources: {}", e.getMessage(), e);
+            throw new RuntimeException("Error closing database resources.", e);
         }
     }
 
     /**
-     * Closes the database connection for the current thread.
-     * It also removes the connection from ThreadLocal.
+     * Executes a SQL SELECT query and returns the results as a List of Maps.
+     * Each Map represents a row, with column names as keys.
+     * @param query The SQL SELECT query string.
+     * @return A List of Maps, where each Map represents a row from the query result.
+     * @throws RuntimeException if a SQLException occurs.
      */
-    public static void closeConnection() {
-        Connection connection = connectionThreadLocal.get();
-        if (connection != null) {
+    public static List<Map<String, String>> executeQuery(String query) {
+        List<Map<String, String>> resultList = new ArrayList<>();
+        try {
+            establishConnection(); // Ensure the connection is open
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query); // Execute query and get ResultSet
+
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            // Iterate through the ResultSet and build the List<Map<String, String>>
+            while (resultSet.next()) {
+                Map<String, String> row = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    String columnValue = resultSet.getString(i); // Get string value for the column
+                    row.put(columnName, columnValue);
+                }
+                resultList.add(row);
+            }
+            logger.debug("Query executed successfully: '{}'. Rows returned: {}", query, resultList.size());
+        } catch (SQLException e) {
+            logger.error("Error executing query: '{}'. Message: {}", query, e.getMessage(), e);
+            throw new RuntimeException("Failed to execute query: " + query, e);
+        } finally {
+            // IMPORTANT: Close the ResultSet and Statement in the finally block
+            // The connection should stay open as it's managed by the class level 'connection' static variable
             try {
-                if (!connection.isClosed()) {
-                    connection.close();
-                    logger.info("Database connection closed for this thread.");
-                } else {
-                    logger.debug("Database connection was already closed for this thread.");
+                if (resultSet != null) {
+                    resultSet.close();
+                    resultSet = null; // Clear for next use
+                }
+                if (statement != null) {
+                    statement.close();
+                    statement = null; // Clear for next use
                 }
             } catch (SQLException e) {
-                logger.error("Error closing database connection: {}", e.getMessage(), e);
-            } finally {
-                connectionThreadLocal.remove(); // Remove connection from ThreadLocal
+                logger.error("Error closing resultSet or statement after query: {}", e.getMessage());
             }
-        } else {
-            logger.debug("No database connection found for this thread to close.");
         }
+        return resultList; // Return the processed List<Map<String, String>>
     }
 
     /**
-     * Retrieves the current database connection for the thread.
-     *
-     * @return The Connection object.
-     * @throws IllegalStateException if no connection is established for the current thread.
-     */
-    private static Connection getConnection() {
-        Connection connection = connectionThreadLocal.get();
-        if (connection == null) {
-            logger.error("No database connection found for the current thread. Call establishConnection() first.");
-            throw new IllegalStateException("Database connection not established for current thread.");
-        }
-        return connection;
-    }
-
-    /**
-     * Executes an update query (INSERT, UPDATE, DELETE).
-     *
-     * @param query The SQL query to execute.
-     * @return The number of rows affected.
-     * @throws RuntimeException if a SQLException occurs during query execution.
+     * Executes a SQL INSERT, UPDATE, or DELETE query.
+     * Returns the number of rows affected.
+     * @param query The SQL INSERT/UPDATE/DELETE query string.
+     * @return The number of rows affected by the query.
+     * @throws RuntimeException if a SQLException occurs.
      */
     public static int executeUpdate(String query) {
         int rowsAffected = 0;
-        try (Statement statement = getConnection().createStatement()) {
+        try {
+            establishConnection();
+            statement = connection.createStatement();
             rowsAffected = statement.executeUpdate(query);
-            logger.debug("Executed update query: '{}', Rows affected: {}", query, rowsAffected);
+            logger.info("Update query executed successfully: '{}'. Rows affected: {}", query, rowsAffected);
         } catch (SQLException e) {
-            logger.error("Error executing update query: '{}'. {}", query, e.getMessage(), e);
+            logger.error("Error executing update query: '{}'. Message: {}", query, e.getMessage(), e);
             throw new RuntimeException("Failed to execute update query: " + query, e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                    statement = null;
+                }
+            } catch (SQLException e) {
+                logger.error("Error closing statement after update query: {}", e.getMessage());
+            }
         }
         return rowsAffected;
     }
-
-    /**
-     * Executes a select query.
-     *
-     * @param query The SQL query to execute.
-     * @return A ResultSet containing the query results. The caller is responsible for closing the ResultSet and its Statement.
-     * @throws RuntimeException if a SQLException occurs during query execution.
-     */
-    public static ResultSet executeQuery(String query) {
-        try {
-            Statement statement = getConnection().createStatement();
-            logger.debug("Executing query: '{}'", query);
-            return statement.executeQuery(query);
-        } catch (SQLException e) {
-            logger.error("Error executing query: '{}'. {}", query, e.getMessage(), e);
-            throw new RuntimeException("Failed to execute query: " + query, e);
-        }
-    }
-
-    /**
-     * Fetches a single String value from the first column of the first row of a query result.
-     *
-     * @param query The SQL query to execute.
-     * @return The String value, or null if no result is found.
-     */
-    public static String getSingleStringValue(String query) {
-        try (Statement statement = getConnection().createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
-            if (rs.next()) {
-                String value = rs.getString(1);
-                logger.debug("Fetched single string value for query '{}': {}", query, value);
-                return value;
-            }
-        } catch (SQLException e) {
-            logger.error("Error fetching single string value for query '{}'. {}", query, e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch single string value: " + query, e);
-        }
-        return null;
-    }
-
-    /**
-     * Fetches a single Integer value from the first column of the first row of a query result.
-     *
-     * @param query The SQL query to execute.
-     * @return The Integer value, or null if no result is found.
-     */
-    public static Integer getSingleIntegerValue(String query) {
-        try (Statement statement = getConnection().createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
-            if (rs.next()) {
-                int value = rs.getInt(1);
-                if (rs.wasNull()) { // Check if the database value was SQL NULL
-                    return null;
-                }
-                logger.debug("Fetched single integer value for query '{}': {}", query, value);
-                return value;
-            }
-        } catch (SQLException e) {
-            logger.error("Error fetching single integer value for query '{}'. {}", query, e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch single integer value: " + query, e);
-        }
-        return null;
-    }
-
-    // You can add more specific data retrieval methods (e.g., getRowAsMap, getTableAsListofMaps)
-    // based on your project's needs.
 }

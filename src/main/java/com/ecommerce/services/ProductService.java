@@ -18,7 +18,7 @@ public class ProductService extends RestClient {
     private String authToken; // To hold the authentication token for subsequent requests
 
     public ProductService(String authToken) {
-        super(ConfigReader.getProperty("api.base.url"));
+        super(ConfigReader.getProperty("api.base.url", "/api/users"));
         this.authToken = authToken; // Authentication token obtained from AuthService
         logger.info("ProductService initialized with token.");
     }

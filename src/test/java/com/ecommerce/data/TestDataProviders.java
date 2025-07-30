@@ -1,34 +1,39 @@
-// src/main/java/com/ecommerce/data/TestDataProviders.java
-
 package com.ecommerce.data;
 
+import com.ecommerce.database.DBUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.DataProvider;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class TestDataProviders {
 
+public class TestDataProviders {
     private static final Logger logger = LogManager.getLogger(TestDataProviders.class);
 
+    // Existing DataProvider for JSON
     @DataProvider(name = "loginData")
-    public static Object[][] getLoginData() { // Renamed for clarity and consistency with @Test annotation
+    public static Object[][] getLoginDataFromJson() {
         ObjectMapper mapper = new ObjectMapper();
+        InputStream is = null; // Declare InputStream outside try-block
         try {
-            // Ensure the path is correct based on where you store login_data.json
-            File jsonFile = new File("src/main/resources/testdata/login_data.json");
-            logger.info("Attempting to read login data from: {}", jsonFile.getAbsolutePath());
+            String resourcePath = "testdata/login_data.json";
+            logger.info("Attempting to read login data from classpath resource: {}", resourcePath);
 
-            // Read the JSON file into a List of Maps
-            List<Map<String, Object>> jsonData = mapper.readValue(jsonFile,
+            is = TestDataProviders.class.getClassLoader().getResourceAsStream(resourcePath);
+
+            if (is == null) {
+                logger.error("Resource not found in classpath: {}. Please ensure it's in src/test/resources/data/", resourcePath);
+                throw new IOException("Resource not found: " + resourcePath);
+            }
+
+            List<Map<String, Object>> jsonData = mapper.readValue(is,
                     mapper.getTypeFactory().constructCollectionType(List.class, Map.class));
 
-            // Convert the List of Maps to Object[][] for TestNG DataProvider
             List<Object[]> dataList = new ArrayList<>();
             for (Map<String, Object> row : jsonData) {
                 dataList.add(new Object[]{
@@ -36,107 +41,62 @@ public class TestDataProviders {
                         row.get("password"),
                         row.get("level"),
                         row.get("expectedSuccess")
-                        // If you also want description: row.get("description")
                 });
             }
             logger.info("Successfully loaded {} login data rows from JSON.", dataList.size());
-            return dataList.toArray(new Object[0][]); // Convert List<Object[]> to Object[][]
+            return dataList.toArray(new Object[0][]);
         } catch (IOException e) {
-            logger.error("Failed to load login data from JSON file: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to load login data from JSON file: " + e.getMessage(), e);
+            logger.error("Failed to load login data from JSON resource '{}': {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to load login data from JSON resource: " + e.getMessage(), e);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close(); // Close the InputStream
+                } catch (IOException e) {
+                    logger.error("Error closing InputStream for JSON file: {}", e.getMessage());
+                }
+            }
         }
     }
 
-    // Add the customerData DataProvider here as well, reading from CSV
+    // NEW DataProvider for fetching login credentials from Database
+    @DataProvider(name = "dbLoginData")
+    public static Object[][] getLoginDataFromDB() {
+        // SQL query to fetch data from your 'credentials' table
+        // Adjust column names if they differ in your DB table (e.g., 'user_name' instead of 'username')
+        String query = "SELECT username, password, level FROM credentials";
+        List<Map<String, String>> dbResults = DBUtil.executeQuery(query);
+
+        if (dbResults.isEmpty()) {
+            logger.warn("No login data found in the database table 'credentials' using query: {}", query);
+            return new Object[][]{}; // Return empty array if no data
+        }
+
+        Object[][] data = new Object[dbResults.size()][3]; // 3 columns: username, password, level
+
+        for (int i = 0; i < dbResults.size(); i++) {
+            Map<String, String> row = dbResults.get(i);
+            // Ensure keys match your database column names EXACTLY (case-sensitive if DB is)
+            data[i][0] = row.get("username");
+            data[i][1] = row.get("password");
+            data[i][2] = row.get("level");
+            // Note: This DB query doesn't have 'expectedSuccess'. You'll need to derive it
+            // based on the username/password/level in your test or add a column to your DB.
+            // For now, the test method will need to handle this.
+            // If you add an 'expected_success' column to your DB, you can fetch it:
+            // data[i][3] = Boolean.parseBoolean(row.get("expected_success"));
+        }
+        logger.info("Successfully loaded {} login data rows from Database.", dbResults.size());
+        return data;
+    }
+
+    // Existing DataProvider for customer data (if reading from CSV)
     @DataProvider(name = "customerData")
     public static Object[][] getCustomerData() {
-        // Implement CSV reading logic here (e.g., using OpenCSV or Apache Commons CSV)
-        // For now, if you want to test, you can put the hardcoded customer data here temporarily,
-        // but the goal is to read it from customer_data.csv
+        // Implement CSV reading logic here
         return new Object[][] {
                 {"CUST001", "John", "Doe", "john.doe@example.com", "123-456-7890", "Active"},
-                // ... rest of customer data (ideally read from CSV)
+                // ...
         };
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// src/main/java/com/ecommerce/data/TestDataProviders.java
-
-package com.ecommerce.data;
-
-import org.testng.annotations.DataProvider;
-
-public class TestDataProviders {
-
-    @DataProvider(name = "loginData")
-    public static Object[][] getLoginData() {
-        return new Object[][] {
-                // {username, password, level, expectedSuccess}
-                {"admin", "admin123", "Beginner", true}, // Corrected: "Beginner" as a String
-                {"invalid_user", "wrong_password", "Beginner", false}, // Corrected username and added "Beginner"
-                {"", "some_password", "Beginner", false}, // Corrected: Added "Beginner" and aligned parameters
-                {"admin", "", "Beginner", false}, // Added: Test for empty password (based on screenshot and common scenarios)
-                {"admin", "admin123", "Advanced", true}, // Example: Another valid level
-                {"admin", "admin123", "InvalidLevel", false} // Example: Test for invalid level
-        };
-    }
-
-}
-
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// src/main/java/com/ecommerce/utils/TestDataProviders.java
-
-package com.ecommerce.data;
-
-import org.testng.annotations.DataProvider;
-
-public class TestDataProviders {
-
-    @DataProvider(name = "loginData")
-    public static Object[][] getLoginData() {
-        return new Object[][] {
-                {"admin", "admin123", Beginner, true},
-                {"invalid_user@example.com", "wrong_password", Beginner, false},
-                {"", "some_password", false}
-        };
-    }
-
-    @DataProvider(name = "customerAccountCreationData")
-    public static Object[][] getCustomerAccountCreationData() {
-        return new Object[][] {
-                {"John", "Doe", "john.doe@example.com", "password123", true},
-                {"Jane", "Smith", "jane.smith@example.com", "password123", false} // Example for existing user
-        };
-    }
-}
- */

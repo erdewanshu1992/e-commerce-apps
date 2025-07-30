@@ -1,6 +1,6 @@
-// src/main/java/com/ecommerce/factory/DriverFactory.java
 package com.ecommerce.factory;
 
+import com.ecommerce.interfaces.IDriverFactory;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.WebDriver;
@@ -45,7 +45,7 @@ public class DriverFactory implements IDriverFactory {
             case "edge":
                 WebDriverManager.edgedriver().setup();
                 EdgeOptions edgeOptions = new EdgeOptions();
-                // Add common edge options here
+                // Add common-edge options here
                 tlDriver.set(new EdgeDriver(edgeOptions));
                 break;
             default:
@@ -57,7 +57,7 @@ public class DriverFactory implements IDriverFactory {
         return getDriver();
     }
 
-    // Corrected method signature: 'Object o' is now 'Capabilities capabilities'
+    // Corrected method signature: 'Object o' is now 'Capabilities'
     @Override
     public WebDriver init_driver_remote(String browserName, String hubUrl, Capabilities capabilities) {
         logger.info("Initializing remote driver for browser: {} on hub: {}", browserName, hubUrl);
@@ -97,43 +97,3 @@ public class DriverFactory implements IDriverFactory {
         return tlDriver.get();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-//package com.ecommerce.factory;
-//
-//import io.github.bonigarcia.wdm.WebDriverManager;
-//import org.openqa.selenium.WebDriver;
-//import org.openqa.selenium.chrome.ChromeDriver;
-//import org.openqa.selenium.firefox.FirefoxDriver;
-//
-//public class DriverFactory {
-//    public static WebDriver initDriver(String browser) {
-//        WebDriver driver;
-//
-//        switch (browser.toLowerCase()) {
-//            case "firefox":
-//                WebDriverManager.firefoxdriver().setup();
-//                driver = new FirefoxDriver();
-//                break;
-//
-//            case "chrome":
-//            default:
-//                WebDriverManager.chromedriver().setup();
-//                driver = new ChromeDriver();
-//                break;
-//        }
-//
-//        driver.manage().window().maximize();
-//        return driver;
-//    }
-//}

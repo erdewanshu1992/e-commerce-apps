@@ -1,5 +1,4 @@
-// src/main/java/com/ecommerce/factory/IDriverFactory.java
-package com.ecommerce.factory;
+package com.ecommerce.interfaces;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.Capabilities; // <--- Import Capabilities

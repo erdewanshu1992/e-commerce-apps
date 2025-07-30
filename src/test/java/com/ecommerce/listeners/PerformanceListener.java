@@ -6,7 +6,6 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

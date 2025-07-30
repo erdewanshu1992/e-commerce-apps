@@ -1,11 +1,9 @@
-// src/main/java/com/ecommerce/utils/ScreenshotUtil.java
-
 package com.ecommerce.utils;
 
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.apache.commons.io.FileUtils; // You'll need this dependency
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
