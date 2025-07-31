@@ -96,4 +96,13 @@ public class DriverFactory implements IDriverFactory {
     public static synchronized WebDriver getDriver() {
         return tlDriver.get();
     }
+
+    public static void setDriver(WebDriver driver) {
+        if (driver != null) {
+            tlDriver.set(driver);
+            logger.info("Driver set in ThreadLocal.");
+        } else {
+            logger.warn("Attempted to set a null driver in ThreadLocal.");
+        }
+    }
 }

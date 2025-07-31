@@ -17,6 +17,4 @@ public interface IWaitStrategy {
     WebElement waitForElementToBePresent(WebDriver driver, By locator);
     boolean waitForUrlContains(WebDriver driver, String urlFraction);
 
-    // All the WebDriverUtils logic and static field were removed from here.
-    // They belong in WebDriverUtils.java
 }
